@@ -50,7 +50,7 @@ public class TicTacToe {
         return steps.stream()
                 .filter(step -> step.player.equals(player))
                 .filter(step -> step.piece.y == height)
-                .mapToInt(value -> value.piece.x).sum() == 6;
+                .mapToInt(step -> step.piece.x).sum() == 6;
     }
 
     private void setBox(int x, int y) {
@@ -89,8 +89,8 @@ public class TicTacToe {
     }
 
     static class Step {
-        Player player;
-        Piece piece;
+        private final Player player;
+        private final Piece piece;
 
         public Step(Player player, Piece piece) {
             this.player = player;
@@ -99,9 +99,9 @@ public class TicTacToe {
     }
 
     static class Piece {
-        final int x;
+        private final int x;
 
-        final int y;
+        private final int y;
 
         public Piece(int x, int y) {
             this.x = x;
