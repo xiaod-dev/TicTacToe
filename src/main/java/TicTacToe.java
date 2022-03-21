@@ -1,42 +1,107 @@
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 
 public class TicTacToe {
-    private final HashSet<Piece> pieces = new HashSet<>();
+    private final HashSet<Step> steps = new HashSet<>();
 
-    private boolean nextPlayerIsX = true;
+    private Player nextPlayer = Player.X;
 
-    public String play(int x, int y) {
+    private static final int MINIMAL_STEP = 3;
+
+    public Result play(int x, int y) {
         checkAxis(x);
         checkAxis(y);
 
         setBox(x, y);
-        nextPlayerIsX = !nextPlayerIsX;
-        return "NO winner";
+        togglePlayer();
+        return checkWinner();
+    }
+
+    private void togglePlayer() {
+        if (Player.X.equals(nextPlayer)) {
+            nextPlayer = Player.O;
+        } else {
+            nextPlayer = Player.X;
+        }
+    }
+
+    private Result checkWinner() {
+        return checkHorizontal();
+    }
+
+    private Result checkHorizontal() {
+        if (steps.size() < MINIMAL_STEP) {
+            return Result.NO_WINNER;
+        }
+//        List<Player> players = List.of(Player.X, Player.O);
+        // fixed height from 1 to 3
+        List<Integer> listOfY = List.of(1, 2, 3);
+        boolean playerXResult = listOfY.stream().anyMatch(integer -> isCompleteHorizontalLine(integer, Player.X));
+
+        boolean playerOResult = listOfY.stream()
+                .anyMatch(integer -> isCompleteHorizontalLine(integer, Player.O));
+        if (playerXResult) return Result.X_WINNER;
+        if (playerOResult) return Result.O_WINNER;
+        return Result.NO_WINNER;
+    }
+
+    private boolean isCompleteHorizontalLine(Integer height, Player player) {
+        return steps.stream()
+                .filter(step -> step.player.equals(player))
+                .filter(step -> step.piece.y == height)
+                .mapToInt(value -> value.piece.x).sum() == 6;
     }
 
     private void setBox(int x, int y) {
         var piece = new Piece(x, y);
-        if (pieces.contains(piece)) {
+        if (steps.stream().anyMatch(step -> piece.equals(step.piece))) {
             throw new RuntimeException("occupied!");
         } else {
-            pieces.add(piece);
+            steps.add(new Step(nextPlayer, piece));
         }
     }
 
     private void checkAxis(int axis) {
-        if (axis < 1 || axis > 3)
-            throw new RuntimeException("axis should > 0 and <= 3");
+        if (axis < 1 || axis > 3) throw new RuntimeException("axis should > 0 and <= 3");
     }
 
-    public String nextPlayer() {
-        return nextPlayerIsX ? "X" : "O";
+    public Player nextPlayer() {
+        return nextPlayer;
+    }
+
+    enum Player {
+        X(), O();
+
+        Player() {
+        }
+    }
+
+    enum Result {
+        X_WINNER("Winner is X"),
+        O_WINNER("Winner is O"),
+        NO_WINNER("No winner");
+        private String desc;
+
+        Result(String desc) {
+            this.desc = desc;
+        }
+    }
+
+    static class Step {
+        Player player;
+        Piece piece;
+
+        public Step(Player player, Piece piece) {
+            this.player = player;
+            this.piece = piece;
+        }
     }
 
     static class Piece {
-        private final int x;
+        final int x;
 
-        private final int y;
+        final int y;
 
         public Piece(int x, int y) {
             this.x = x;

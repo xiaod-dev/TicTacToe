@@ -35,17 +35,28 @@ public class TicTacToeSpec {
 
     @Test
     void givenFirstTurnNextPlayerShouldBeX() {
-        assertEquals("X", ticTacToe.nextPlayer());
+        assertEquals(TicTacToe.Player.X, ticTacToe.nextPlayer());
     }
 
     @Test
     void givenLastTurnWasXWhenNextPlayerThenO() {
         ticTacToe.play(1, 1);
-        assertEquals("O", ticTacToe.nextPlayer());
+        assertEquals(TicTacToe.Player.O, ticTacToe.nextPlayer());
     }
 
     @Test
     void whenPlayThenNoWinner() {
-        assertEquals(ticTacToe.play(1, 1), "NO winner");
+        // default return No winner
+        assertEquals(ticTacToe.play(1, 1), TicTacToe.Result.NO_WINNER);
+    }
+
+    @Test
+    void whenPlayAndCompleteHorizontalLineThenWinner() {
+        ticTacToe.play(1, 1); // X
+        ticTacToe.play(1, 2); // O
+        ticTacToe.play(2, 1); // X
+        ticTacToe.play(2, 2); // O
+        TicTacToe.Result result = ticTacToe.play(3, 1);// X
+        assertEquals(TicTacToe.Result.X_WINNER, result);
     }
 }
