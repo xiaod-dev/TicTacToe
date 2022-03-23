@@ -1,6 +1,7 @@
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class TicTacToe {
     private final HashSet<Step> steps = new HashSet<>();
@@ -15,7 +16,12 @@ public class TicTacToe {
 
         setBox(x, y);
         togglePlayer();
-        return checkWinner();
+
+        Result result = checkWinner();
+        if (result.equals(Result.NO_WINNER)) {
+            result = checkIsDrawGame();
+        }
+        return result;
     }
 
     private void togglePlayer() {
@@ -27,14 +33,51 @@ public class TicTacToe {
     }
 
     private Result checkWinner() {
-        return checkHorizontal();
-    }
-
-    private Result checkHorizontal() {
         if (steps.size() < MINIMAL_STEP) {
             return Result.NO_WINNER;
         }
-//        List<Player> players = List.of(Player.X, Player.O);
+        Result result = checkHorizontal();
+        result = result.equals(Result.NO_WINNER) ? checkVertical() : result;
+        return result.equals(Result.NO_WINNER) ? checkDiagonal() : result;
+    }
+
+    private Result checkIsDrawGame() {
+        return steps.size() == 9 ? Result.DRAW : Result.NO_WINNER;
+    }
+
+    private Result checkDiagonal() {
+        // sum of x and y should be 6 at the same time and piece size is 6
+        if (checkplayerIsWinByDiagonal(Player.X)) {
+            return Result.X_WINNER;
+        }
+        if (checkplayerIsWinByDiagonal(Player.O)) {
+            return Result.O_WINNER;
+        }
+        return Result.NO_WINNER;
+    }
+
+    private boolean checkplayerIsWinByDiagonal(Player x) {
+        final List<Piece> pieces = steps.stream()
+                .filter(step -> step.player.equals(x))
+                .map(step -> step.piece).collect(Collectors.toList());
+        final boolean axisX = pieces.stream().mapToInt(piece -> piece.x).sum() == 6;
+        final boolean axisY = pieces.stream().mapToInt(piece -> piece.y).sum() == 6;
+        return pieces.size() == 3 && axisX && axisY;
+    }
+
+    private Result checkVertical() {
+        // fixed width from 1 to 3
+        List<Integer> listOfX = List.of(1, 2, 3);
+        boolean playerXResult = listOfX.stream().anyMatch(integer -> isCompleteVerticalLine(integer, Player.X));
+
+        boolean playerOResult = listOfX.stream()
+                .anyMatch(integer -> isCompleteVerticalLine(integer, Player.O));
+        if (playerXResult) return Result.X_WINNER;
+        if (playerOResult) return Result.O_WINNER;
+        return Result.NO_WINNER;
+    }
+
+    private Result checkHorizontal() {
         // fixed height from 1 to 3
         List<Integer> listOfY = List.of(1, 2, 3);
         boolean playerXResult = listOfY.stream().anyMatch(integer -> isCompleteHorizontalLine(integer, Player.X));
@@ -51,6 +94,13 @@ public class TicTacToe {
                 .filter(step -> step.player.equals(player))
                 .filter(step -> step.piece.y == height)
                 .mapToInt(step -> step.piece.x).sum() == 6;
+    }
+
+    private boolean isCompleteVerticalLine(Integer width, Player player) {
+        return steps.stream()
+                .filter(step -> step.player.equals(player))
+                .filter(step -> step.piece.x == width)
+                .mapToInt(step -> step.piece.y).sum() == 6;
     }
 
     private void setBox(int x, int y) {
@@ -80,7 +130,8 @@ public class TicTacToe {
     enum Result {
         X_WINNER("Winner is X"),
         O_WINNER("Winner is O"),
-        NO_WINNER("No winner");
+        NO_WINNER("No winner"),
+        DRAW("The result is draw");
         private String desc;
 
         Result(String desc) {
